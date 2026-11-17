@@ -1,0 +1,88 @@
+{
+  "run_id": 43881239227,
+  "revision": "c86f17eefe009671c392d107218cfc20af2bd1db",
+  "provenance_and_checksums_verified": true,
+  "complete_start_count": 100,
+  "iterations_per_start": 1000,
+  "winner": 81,
+  "logged_final_loss": 0.18592099845409393,
+  "recomputed_loss": 0.1859174976199271,
+  "initial_zero_coefficient_loss": 0.7421399066324035,
+  "relative_loss_improvement": 0.7494845702833015,
+  "best_start_loss_min": 0.18591263890266418,
+  "final_loss_percentiles": [
+    0.18592099845409393,
+    0.2052641697227955,
+    0.21739886701107025,
+    0.2408481054008007,
+    0.3292180597782135
+  ],
+  "starts_improved": 100,
+  "winner_last_100_loss_range": 0.0010705441236495972,
+  "winner_best_iteration": 996,
+  "coefficient_min": -5.427517890930176,
+  "coefficient_max": 5.375813961029053,
+  "observed_sum": 0.9999999999999999,
+  "fitted_sum": 1.0000001192092896,
+  "fitted_min": 1.5218654425552813e-07,
+  "fitted_max": 0.0017616483382880688,
+  "relative_l2_residual": 0.11528204280376587,
+  "max_absolute_residual": 0.0002481336372958183,
+  "bead_kernel_nonzero_voxels": 1,
+  "post_fit_replays": {
+    "aberration-coefficients": {
+      "zernike_output_ex": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      },
+      "zernike_output_em": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      }
+    },
+    "distilled-psfs": {
+      "fit": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      }
+    },
+    "wavefronts": {
+      "wavefront_fit_ex": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      },
+      "wavefront_fit_em": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      }
+    },
+    "vortex-psfs": {
+      "psf_vortex": {
+        "exact": true,
+        "max_absolute_error": 0.0
+      }
+    }
+  },
+  "seconds": 2654.047,
+  "review_date": "2026-11-17",
+  "review_scope": "Full bead-fit artifact from the original bead notebook",
+  "notebook": "examples/imaging/psf_distiller/distiller_test_beads.ipynb",
+  "review_verdict": "Valid computational capture of the fixed-budget notebook flow",
+  "optimizer_rerun": false,
+  "visual_review_completed": true,
+  "adoption_status": "Adopted as a fixed-budget computational reference",
+  "limitations": [
+    "Physical PSF accuracy and global optimizer convergence are not established.",
+    "The existing radius-40 nm kernel at 40 nm pixel spacing contains one nonzero voxel, so it does not model finite bead blurring.",
+    "History logs loss before each optimizer update; returned coefficients are after the final update."
+  ],
+  "ci_validation_scope": "Replay post-fit outputs and the first two optimizer iterations per start; the full fit remains a one-off capture workflow.",
+  "optimizer_prefix_test": {
+    "iterations_per_start": 2,
+    "starts": 100,
+    "rtol": 2.384185791015625e-07,
+    "atol": 0,
+    "observed_cpu_profile_difference": 1.1920928955078125e-07,
+    "stored_histories_unchanged": true
+  }
+}

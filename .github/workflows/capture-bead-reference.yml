@@ -1,0 +1,52 @@
+name: Capture full bead notebook reference
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [refactor/imaging-layout]
+    paths: [.github/workflows/capture-bead-reference.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    # Match the platform used to capture the exact numerical references.
+    runs-on: windows-latest
+    timeout-minutes: 180
+    env:
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MPLBACKEND: Agg
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          python-version: "3.11"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install the package and imaging dependencies
+        run: uv sync --locked --extra imaging --group dev
+
+      - name: Verify the frozen bead preprocessing
+        run: uv run --no-sync pytest tests/regression/test_bead_notebook.py -q
+
+      - name: Capture the original full fit
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run --no-sync python scripts/capture_bead_notebook.py --output bead-reference | tee bead-capture.log
+
+      - name: Upload capture results and execution log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bead-notebook-reference
+          path: |
+            bead-reference/
+            bead-capture.log
+          retention-days: 30

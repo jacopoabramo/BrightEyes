@@ -1,0 +1,1026 @@
+{
+  "status": "complete",
+  "source_revision": "9d7f078",
+  "notebook_sha256": "cd28bfc8c3dd6fb0d21ed6a7b3c22b8a825071d12cbc3fc43b58668143abdc08",
+  "device": "cpu",
+  "threads": 1,
+  "seeds": {
+    "numpy": 0,
+    "torch": 0
+  },
+  "s2ism_rbn_idx_in_focus": 0,
+  "adjustments": [
+    "Use the saved raw crop and calibrated PSFs.",
+    "Select CPU explicitly for reconstruction calls.",
+    "Run focusISM serially instead of using its threading backend."
+  ],
+  "environment": {
+    "python": "3.11.18",
+    "packages": {
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "torch": "2.15.0+cpu"
+    },
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "stages": [
+    {
+      "cell": 6,
+      "name": "clean",
+      "seconds": 0.9530000000004293,
+      "source_sha256": "a100bb037b5c9aab20bb427ddd6cdc96b1e955fbf1882ab03cb4f8aa5500ed3c",
+      "executed_source": "border_to_remove = 3\nN_rep, Nz, Ny, Nx, Nbin, Nch = data.shape\ndata = np.squeeze(data)\nif Nx % 2 == 0:\n    data = data[border_to_remove:-border_to_remove + 1, border_to_remove:-border_to_remove + 1, ...]\nelse:\n    data = data[border_to_remove:-border_to_remove, border_to_remove:-border_to_remove, ...]",
+      "file": "clean.npz",
+      "bytes": 2207514,
+      "sha256": "230d1bc0d038a4dfa4635abb0b20ee5c10833e4f959570f2541b4673a94b5ead",
+      "arrays": {
+        "data": {
+          "shape": [
+            129,
+            129,
+            64,
+            25
+          ],
+          "dtype": "uint16"
+        }
+      },
+      "variables": [
+        "data"
+      ],
+      "original_source": "# Clean data\nborder_to_remove = 3\n\nN_rep, Nz, Ny, Nx, Nbin, Nch = data.shape\n\ndata = np.squeeze(data)\n\nif Nx % 2 == 0:\n    data = data[border_to_remove:-border_to_remove + 1, border_to_remove:-border_to_remove + 1, ...]\nelse:\n    data = data[border_to_remove:-border_to_remove, border_to_remove:-border_to_remove, ...]"
+    },
+    {
+      "cell": 7,
+      "name": "detector-image",
+      "seconds": 0.10899999999946886,
+      "source_sha256": "7f5a966f40aa75352e41351f09f8764b91149593a24f0d2282b970da1e4523e5",
+      "executed_source": "dset = data.sum(axis=-2)\nimg = dset.sum(axis=-1)",
+      "file": "detector-image.npz",
+      "bytes": 333071,
+      "sha256": "ec6056188208124ad9e8896c989a82ada83e3cf77863bb362dd88a60720a5fc4",
+      "arrays": {
+        "dset": {
+          "shape": [
+            129,
+            129,
+            25
+          ],
+          "dtype": "uint64"
+        },
+        "img": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "uint64"
+        }
+      },
+      "variables": [
+        "dset",
+        "img"
+      ],
+      "original_source": "# Build dataset\n\ndset = data.sum(axis=-2)  # sum over the bins\nimg = dset.sum(axis=(-1))  # sum over the bins and channels"
+    },
+    {
+      "cell": 17,
+      "name": "apr",
+      "seconds": 0.1720000000004802,
+      "source_sha256": "395aee3bad81e8b1017a79408c1228d682bfd3da7235049eac4194fd92c1146e",
+      "executed_source": "usf = 100\nref = Nch // 2\nshift, apr = apr.APR(dset, usf, ref, pxsize=pxsizex)\napr_sum = apr.sum(axis=-1)",
+      "file": "apr.npz",
+      "bytes": 331320,
+      "sha256": "cc9eb6dd3287f151c76ce6b39a0a4e71a32652ddd692b75074b5eadb7e8bcf74",
+      "arrays": {
+        "shift": {
+          "shape": [
+            25,
+            2
+          ],
+          "dtype": "float64"
+        },
+        "apr": {
+          "shape": [
+            129,
+            129,
+            25
+          ],
+          "dtype": "float64"
+        },
+        "apr_sum": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "shift",
+        "apr",
+        "apr_sum"
+      ],
+      "original_source": "usf = 100\nref = Nch//2\n\nshift, apr = apr.APR(dset, usf, ref, pxsize = pxsizex)\n\napr_sum = apr.sum(axis=-1)"
+    },
+    {
+      "cell": 19,
+      "name": "focus-ism",
+      "seconds": 33.26599999999962,
+      "source_sha256": "5a3dff31a26c7f85d0839fbc630c8b2c12860a174527b3b838f8687a0be1edc3",
+      "executed_source": "focus_ism_in, focus_ism_out, _ = fISM.focusISM(dset, sigma_B_bound=None, threshold=0, apr=True, calibration=dset[Nx // 4:-Nx // 4 + 1, Nx // 4:-Nx // 4 + 1, :], sum_results=True, parallelize=False)",
+      "file": "focus-ism.npz",
+      "bytes": 268051,
+      "sha256": "d3b7d3c6e5edc41cb1871ea7b4ab5f130eb5f96bb0c84c41e5e98c2ca3035e68",
+      "arrays": {
+        "focus_ism_in": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "float64"
+        },
+        "focus_ism_out": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "float64"
+        },
+        "_": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "focus_ism_in",
+        "focus_ism_out",
+        "_"
+      ],
+      "original_source": "focus_ism_in, focus_ism_out, _  = fISM.focusISM(dset, sigma_B_bound = None, threshold = 0, apr = True, calibration = dset[Nx//4:-Nx//4+1, Nx//4:-Nx//4+1, : ], sum_results = True, parallelize = True)"
+    },
+    {
+      "cell": 24,
+      "name": "rl-open",
+      "seconds": 0.4210000000002765,
+      "source_sha256": "a5f06d2d005759e05a4a57d7ec736ff110841b131bb59e5d384ea574a74a7e79",
+      "executed_source": "num_iter = 100\nrl_open_conf, *_ = s2.max_likelihood_reconstruction(img[:, :, np.newaxis], psf[np.newaxis, :, :, np.newaxis], max_iter=num_iter, rep_to_save='all', process='cpu')\nrl_open_conf = rl_open_conf.squeeze()",
+      "file": "rl-open.npz",
+      "bytes": 6063906,
+      "sha256": "4921ef593eef61399a5812028cf698d32bc30ab51fe9bf6f1af301d3ff23776a",
+      "arrays": {
+        "rl_open_conf": {
+          "shape": [
+            101,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "__0": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__1": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__2": {
+          "shape": [],
+          "dtype": "int64"
+        }
+      },
+      "variables": [
+        "rl_open_conf",
+        "_"
+      ],
+      "original_source": "num_iter = 100\n\nrl_open_conf, *_ = s2.max_likelihood_reconstruction(img[:,:,np.newaxis], psf[np.newaxis,:,:,np.newaxis], max_iter=num_iter, rep_to_save='all')\nrl_open_conf = rl_open_conf.squeeze()"
+    },
+    {
+      "cell": 25,
+      "name": "rl-closed",
+      "seconds": 0.4070000000001528,
+      "source_sha256": "21f6f040211f133a6aa552ee6e580003a72447233d9cf9ef47c4ce7d1a5dacd8",
+      "executed_source": "rl_closed_conf, *_ = s2.max_likelihood_reconstruction(dset[:, :, Nch // 2, np.newaxis], psf_closed[np.newaxis, :, :, np.newaxis], max_iter=num_iter, rep_to_save='all', process='cpu')\nrl_closed_conf = rl_closed_conf.squeeze()",
+      "file": "rl-closed.npz",
+      "bytes": 6183311,
+      "sha256": "4901b072a3123a5642b4b48d9bcddf70dec7df759db10f9b936cac5dcb54a489",
+      "arrays": {
+        "rl_closed_conf": {
+          "shape": [
+            101,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "__0": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__1": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__2": {
+          "shape": [],
+          "dtype": "int64"
+        }
+      },
+      "variables": [
+        "rl_closed_conf",
+        "_"
+      ],
+      "original_source": "rl_closed_conf, *_ = s2.max_likelihood_reconstruction(dset[:,:,Nch//2, np.newaxis], psf_closed[np.newaxis,:,:,np.newaxis], max_iter=num_iter, rep_to_save='all')\nrl_closed_conf = rl_closed_conf.squeeze()"
+    },
+    {
+      "cell": 27,
+      "name": "mid",
+      "seconds": 2.717999999999847,
+      "source_sha256": "202eec6ca4a289b0e566eef594f253a0c3ef811971f795995f46fc1e8fd66fcd",
+      "executed_source": "mid, *_ = s2.max_likelihood_reconstruction(dset, psf_in[np.newaxis, ...], max_iter=num_iter, rep_to_save='all', process='cpu')\nmid = np.squeeze(mid)",
+      "file": "mid.npz",
+      "bytes": 6069020,
+      "sha256": "acc39ca01cfd182c31282f2e7d27097fc60b03ec884580fb46f3bbe4ce091444",
+      "arrays": {
+        "mid": {
+          "shape": [
+            101,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "__0": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__1": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__2": {
+          "shape": [],
+          "dtype": "int64"
+        }
+      },
+      "variables": [
+        "mid",
+        "_"
+      ],
+      "original_source": "mid, *_ = s2.max_likelihood_reconstruction(dset, psf_in[np.newaxis,...], max_iter = num_iter, rep_to_save ='all')\nmid = np.squeeze(mid)"
+    },
+    {
+      "cell": 29,
+      "name": "s2ism",
+      "seconds": 4.953000000000429,
+      "source_sha256": "853d01c5ba48059e1634e2cced42fd0f1d121e0d153003f51f5a9c0519da0e2f",
+      "executed_source": "s2_rec, *_ = s2.max_likelihood_reconstruction(dset, psf_ism, max_iter=num_iter, rep_to_save='all', process='cpu')\ns2_rec_in = np.squeeze(s2_rec)[:, 1, ...]\ns2_rec_out = np.squeeze(s2_rec)[:, 0, ...]\ns2_rec_in.shape",
+      "file": "s2ism.npz",
+      "bytes": 24797136,
+      "sha256": "77a44ecb33c60954115957a279eeb135a51e4a9743d24e5e55e2a9f932c101d3",
+      "arrays": {
+        "s2_rec": {
+          "shape": [
+            101,
+            2,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "s2_rec_in": {
+          "shape": [
+            101,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "s2_rec_out": {
+          "shape": [
+            101,
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "__0": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__1": {
+          "shape": [
+            2,
+            101
+          ],
+          "dtype": "float32"
+        },
+        "__2": {
+          "shape": [],
+          "dtype": "int64"
+        }
+      },
+      "variables": [
+        "s2_rec",
+        "s2_rec_in",
+        "s2_rec_out",
+        "_"
+      ],
+      "original_source": "s2_rec, *_ = s2.max_likelihood_reconstruction(dset, psf_ism, max_iter=num_iter, rep_to_save='all')\n\ns2_rec_in = np.squeeze(s2_rec)[:, 1, ...]\ns2_rec_out = np.squeeze(s2_rec)[:, 0, ...]\ns2_rec_in.shape"
+    },
+    {
+      "cell": 34,
+      "name": "time-rebin",
+      "seconds": 0.46900000000005093,
+      "source_sha256": "001c8ec5f82d4429b1a98730b3065d37cc9b29e1d9c42ca209f4800bd83b1209",
+      "executed_source": "split_method = 'time_rebin'\nK = 8\nlength = data.shape[-2] // K\nif split_method == 'multinomial':\n    dset_varreg = pp.multinomial_split(dset, n_splits=K).cpu().numpy()\nelif split_method == 'time_rebin':\n    dset_varreg = pp.rebin(np.moveaxis(data, -2, -1), nbin=K, length=length, channel=-1)\nimg_close_varreg = dset_varreg[..., 12, :]\nimg_varreg = dset_varreg.sum(axis=-2)\nprint(f'VarReg image shape {img_varreg.shape}')",
+      "file": "time-rebin.npz",
+      "bytes": 1314635,
+      "sha256": "d2cb6198b7519a72f70805283361e1aadbb230351e53d39cf6f9dc188074ded5",
+      "arrays": {
+        "dset_varreg": {
+          "shape": [
+            129,
+            129,
+            25,
+            8
+          ],
+          "dtype": "uint64"
+        },
+        "img_close_varreg": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "uint64"
+        },
+        "img_varreg": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "uint64"
+        }
+      },
+      "variables": [
+        "dset_varreg",
+        "img_close_varreg",
+        "img_varreg"
+      ],
+      "original_source": "# Data bin split\nsplit_method = 'time_rebin'\nK = 8\nlength = data.shape[-2] // K\n\nif split_method == 'multinomial':\n    dset_varreg = pp.multinomial_split(dset, n_splits=K).cpu().numpy()\nelif split_method == 'time_rebin':\n    dset_varreg = pp.rebin(np.moveaxis(data, -2, -1), nbin=K, length=length, channel=-1)\n    \nimg_close_varreg = dset_varreg[..., 12, :]\nimg_varreg = dset_varreg.sum(axis=-2)\n\nprint(f'VarReg image shape {img_varreg.shape}')\n"
+    },
+    {
+      "cell": 36,
+      "name": "weight-map",
+      "seconds": 0.046000000000276486,
+      "source_sha256": "93d349d0d6bc7bc92a9de166ede86d6a6d8f75aa932eda9c4e9df9bb12304b1f",
+      "executed_source": "snr_map = utils.calculate_snr(img_varreg)\nweight_map = utils.calculate_weight_map(img_varreg, smooth_sigma=2, normalize=False)\nweight_map = np.clip(weight_map, max=np.percentile(weight_map, 80))\nweight_map = weight_map / np.max(weight_map)",
+      "file": "weight-map.npz",
+      "bytes": 100797,
+      "sha256": "a262f558d4817a7d1c694a91ce017d28a5d9e1cde5ae985c6d27589f7ed627d4",
+      "arrays": {
+        "snr_map": {
+          "shape": [
+            129,
+            129
+          ],
+          "dtype": "float32"
+        },
+        "weight_map": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        }
+      },
+      "variables": [
+        "snr_map",
+        "weight_map"
+      ],
+      "original_source": "snr_map = utils.calculate_snr(img_varreg)\nweight_map = utils.calculate_weight_map(img_varreg, smooth_sigma = 2, normalize=False) \n\nweight_map = np.clip(weight_map, max=np.percentile(weight_map, 80)) #Nup\nweight_map = weight_map / np.max(weight_map)"
+    },
+    {
+      "cell": 40,
+      "name": "rbn-parameters",
+      "seconds": 0.0,
+      "source_sha256": "3044f57b6f619313abe0794fa496f22723cf365cdddedae79466a386663858f1",
+      "executed_source": "method = 'sgp'\nregularizer_norm = 'l2'\ninitialization = 'flat'\nnum_iter = 10\nlambdas = np.logspace(np.log10(0.1), np.log10(50), num=10)",
+      "file": "rbn-parameters.npz",
+      "bytes": 287,
+      "sha256": "26e0583c5d01201c3a6abec7c2c5ef9bc9dacdb16613e0e870f1cf11489f0024",
+      "arrays": {
+        "lambdas": {
+          "shape": [
+            10
+          ],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "lambdas"
+      ],
+      "original_source": "method = 'sgp'  # 'sgm' 'osl' 'abs'\nregularizer_norm = 'l2'  # \"l2\", \"l1\", \"kl\"\ninitialization = 'flat'  # 'data', 'flat', 'rl\nnum_iter = 10\nlambdas = np.logspace(np.log10(0.1), np.log10(50), num=10)\n"
+    },
+    {
+      "cell": 41,
+      "name": "rl-rbn",
+      "seconds": 2.5780000000004293,
+      "source_sha256": "19cc0053bd6ead037bbd4062f70bcfbb7dc00e56ac5e080afe04fa185584a076",
+      "executed_source": "solver_fn_wp = wp.make_variance_reconstructor(dset=img_varreg, psf=psf, weight_map=weight_map, stop_tol=1e-08, stop_criteria='step_size', max_iter=num_iter, method='sgp', regularizer_norm=regularizer_norm, initialization=initialization, normalize=True, process='cpu', rec_to_save='last', step_size_search='line_search', line_search_params=(1e+18, 2), verbose=False)\nobj_list_wp_rl, white_list_rl = wp.choose_lambda_by_WP(solver_fn=solver_fn_wp, lambdas=lambdas, dset=torch.Tensor(img_varreg), psf=torch.Tensor(psf), masked=True, remove_border=10, idx_in_focus=0, device='cpu', return_all_iters=False, return_all_solutions=True, return_z_variables=False, verbose=True)\nbest_lambda_wp_rl = lambdas[np.argmin(white_list_rl)]\nbest_obj_wp_rl = obj_list_wp_rl[np.argmin(white_list_rl)]\nbest_white_rl = white_list_rl[np.argmin(white_list_rl)]",
+      "file": "rl-rbn.npz",
+      "bytes": 4944887,
+      "sha256": "83365771c4f13c00e74e0ebe35658cd0d0ed1131ee7298921645d486b73a037b",
+      "arrays": {
+        "obj_list_wp_rl_0": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_1": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_2": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_3": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_4": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_5": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_6": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_7": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_8": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_rl_9": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "white_list_rl_0_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_1_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_2_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_3_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_4_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_5_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_6_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_7_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_8_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_rl_9_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_lambda_wp_rl": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_obj_wp_rl": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "best_white_rl_0": {
+          "shape": [],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "obj_list_wp_rl",
+        "white_list_rl",
+        "best_lambda_wp_rl",
+        "best_obj_wp_rl",
+        "best_white_rl"
+      ],
+      "original_source": "solver_fn_wp = wp.make_variance_reconstructor(\n    dset=img_varreg,  # numpy array\n    psf=psf,  # numpy array\n    weight_map=weight_map,\n    stop_tol=1e-8,\n    stop_criteria='step_size',\n    max_iter=num_iter,\n    method='sgp',  \n    regularizer_norm=regularizer_norm,\n    initialization=initialization,\n    normalize=True,\n    process='gpu',  # or 'gpu' if available\n    rec_to_save='last',\n    step_size_search='line_search',\n    line_search_params=(1e18, 2),\n    verbose=False\n)\n\n\nobj_list_wp_rl, white_list_rl = wp.choose_lambda_by_WP(\n    solver_fn=solver_fn_wp,\n    lambdas=lambdas,\n    dset=torch.Tensor(img_varreg),\n    psf=torch.Tensor(psf),\n    masked=True,\n    remove_border=10,\n    idx_in_focus=0,\n    device='cpu',\n    return_all_iters=False,\n    return_all_solutions=True,\n    return_z_variables=False,\n    verbose=True\n)\n\nbest_lambda_wp_rl = lambdas[np.argmin(white_list_rl)]\nbest_obj_wp_rl = obj_list_wp_rl[np.argmin(white_list_rl)]\nbest_white_rl = white_list_rl[np.argmin(white_list_rl)]\n"
+    },
+    {
+      "cell": 44,
+      "name": "mid-rbn",
+      "seconds": 37.1880000000001,
+      "source_sha256": "3c4388f8d4c6fb0da46d6a29a58e5f06bbd36035394730fd9597c51fa8a3a876",
+      "executed_source": "solver_fn_wp = wp.make_variance_reconstructor(dset=dset_varreg, psf=psf_in, weight_map=weight_map, stop_tol=1e-08, stop_criteria='step_size', max_iter=num_iter, method='sgp', regularizer_norm=regularizer_norm, initialization=initialization, normalize=True, process='cpu', rec_to_save='last', step_size_search='line_search', line_search_params=(1e+18, 2), verbose=False)\nobj_list_wp_mid, white_list_mid = wp.choose_lambda_by_WP(solver_fn=solver_fn_wp, lambdas=lambdas, dset=torch.Tensor(dset_varreg), psf=torch.Tensor(psf_in), masked=True, remove_border=10, idx_in_focus=0, device=torch.device('cpu'), return_all_iters=False, return_all_solutions=True, return_z_variables=False, verbose=True)\nbest_lambda_wp_mid = lambdas[np.argmin(white_list_mid)]\nbest_obj_wp_mid = obj_list_wp_mid[np.argmin(white_list_mid)]\nbest_white_mid = white_list_mid[np.argmin(white_list_mid)]",
+      "file": "mid-rbn.npz",
+      "bytes": 4955829,
+      "sha256": "2ef164a1b0657ec1a82d30d4e102c8aa97656a683a537cab4bb97f611e42429b",
+      "arrays": {
+        "obj_list_wp_mid_0": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_1": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_2": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_3": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_4": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_5": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_6": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_7": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_8": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_mid_9": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "white_list_mid_0_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_1_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_2_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_3_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_4_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_5_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_6_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_7_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_8_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_mid_9_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_lambda_wp_mid": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_obj_wp_mid": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "best_white_mid_0": {
+          "shape": [],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "obj_list_wp_mid",
+        "white_list_mid",
+        "best_lambda_wp_mid",
+        "best_obj_wp_mid",
+        "best_white_mid"
+      ],
+      "original_source": "solver_fn_wp = wp.make_variance_reconstructor(\n    dset=dset_varreg,  # numpy array\n    psf=psf_in,  # numpy array\n    weight_map=weight_map,\n    stop_tol=1e-8,\n    stop_criteria='step_size',\n    max_iter=num_iter,\n    method='sgp',  \n    regularizer_norm=regularizer_norm,\n    initialization=initialization,\n    normalize=True,\n    process='gpu',  # or 'gpu' if available\n    rec_to_save='last',\n    step_size_search='line_search',\n    line_search_params=(1e18, 2),\n    verbose=False\n)\n\nobj_list_wp_mid, white_list_mid = wp.choose_lambda_by_WP(\n    solver_fn=solver_fn_wp,\n    lambdas=lambdas,\n    dset=torch.Tensor(dset_varreg),\n    psf=torch.Tensor(psf_in),\n    masked=True,\n    remove_border=10,\n    idx_in_focus=0,\n    device=torch.device('cpu'),\n    return_all_iters=False,\n    return_all_solutions=True,\n    return_z_variables=False,\n    verbose=True\n)\n\nbest_lambda_wp_mid = lambdas[np.argmin(white_list_mid)]\nbest_obj_wp_mid = obj_list_wp_mid[np.argmin(white_list_mid)]\nbest_white_mid = white_list_mid[np.argmin(white_list_mid)]\n"
+    },
+    {
+      "cell": 47,
+      "name": "s2ism-rbn",
+      "seconds": 60.84400000000005,
+      "source_sha256": "408d9e7e78131b95b15fca61442d7686bcb48530da0f9e645a58d07a44456434",
+      "executed_source": "solver_fn_wp = wp.make_variance_reconstructor(dset=dset_varreg, psf=psf_ism, weight_map=weight_map, stop_tol=1e-08, stop_criteria='step_size', max_iter=num_iter, method='sgp', regularizer_norm=regularizer_norm, initialization=initialization, normalize=True, process='cpu', rec_to_save='last', step_size_search='line_search', line_search_params=(1e+18, 2), verbose=False)\nobj_list_wp_s2ism, white_list_s2ism = wp.choose_lambda_by_WP(solver_fn=solver_fn_wp, lambdas=lambdas, dset=torch.Tensor(dset_varreg), psf=torch.Tensor(psf_ism), masked=True, remove_border=10, idx_in_focus=0, device=torch.device('cpu'), return_all_iters=False, return_all_solutions=True, return_z_variables=False, verbose=True)\nbest_lambda_wp_s2ism = lambdas[np.argmin(white_list_s2ism)]\nbest_obj_wp_s2ism = obj_list_wp_s2ism[np.argmin(white_list_s2ism)]\nbest_white_s2ism = white_list_s2ism[np.argmin(white_list_s2ism)]",
+      "file": "s2ism-rbn.npz",
+      "bytes": 5034880,
+      "sha256": "bf7bc34229042ee2a20ea5c5ba82acea5be2fa5c8e18f724a1fe19e7ef249e76",
+      "arrays": {
+        "obj_list_wp_s2ism_0": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_1": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_2": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_3": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_4": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_5": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_6": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_7": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_8": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "obj_list_wp_s2ism_9": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "white_list_s2ism_0_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_1_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_2_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_3_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_4_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_5_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_6_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_7_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_8_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "white_list_s2ism_9_0": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_lambda_wp_s2ism": {
+          "shape": [],
+          "dtype": "float64"
+        },
+        "best_obj_wp_s2ism": {
+          "shape": [
+            129,
+            129,
+            8
+          ],
+          "dtype": "float32"
+        },
+        "best_white_s2ism_0": {
+          "shape": [],
+          "dtype": "float64"
+        }
+      },
+      "variables": [
+        "obj_list_wp_s2ism",
+        "white_list_s2ism",
+        "best_lambda_wp_s2ism",
+        "best_obj_wp_s2ism",
+        "best_white_s2ism"
+      ],
+      "original_source": "solver_fn_wp = wp.make_variance_reconstructor(\n    dset=dset_varreg,  # numpy array\n    psf=psf_ism,  # numpy array\n    weight_map=weight_map,\n    stop_tol=1e-8,\n    stop_criteria='step_size',\n    max_iter=num_iter,\n    method='sgp',  \n    regularizer_norm=regularizer_norm,\n    initialization=initialization,\n    normalize=True,\n    process='gpu',  # or 'gpu' if available\n    rec_to_save='last',\n    step_size_search='line_search',\n    line_search_params=(1e18, 2),\n    verbose=False\n)\n\nobj_list_wp_s2ism, white_list_s2ism = wp.choose_lambda_by_WP(\n    solver_fn=solver_fn_wp,\n    lambdas=lambdas,\n    dset=torch.Tensor(dset_varreg),\n    psf=torch.Tensor(psf_ism),\n    masked=True,\n    remove_border=10,\n    idx_in_focus=0,\n    device=torch.device('cpu'),\n    return_all_iters=False,\n    return_all_solutions=True,\n    return_z_variables=False,\n    verbose=True\n)\n\nbest_lambda_wp_s2ism = lambdas[np.argmin(white_list_s2ism)]\nbest_obj_wp_s2ism = obj_list_wp_s2ism[np.argmin(white_list_s2ism)]\nbest_white_s2ism = white_list_s2ism[np.argmin(white_list_s2ism)]\n"
+    }
+  ],
+  "current_stage": "s2ism-rbn",
+  "source_notebook": "deconv 3.ipynb",
+  "raw_input": {
+    "notebook": "deconv 3.ipynb",
+    "notebook_sha256": "cd28bfc8c3dd6fb0d21ed6a7b3c22b8a825071d12cbc3fc43b58668143abdc08",
+    "measurement_id": "measurement-001",
+    "source_bytes": 3773083472,
+    "full_source_checksum_verified": false,
+    "source_dataset": "/data",
+    "source_shape": [
+      1,
+      1,
+      1001,
+      1001,
+      64,
+      25
+    ],
+    "axis_order": "rzxytc",
+    "source_slices": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        433,
+        568
+      ],
+      [
+        433,
+        568
+      ],
+      [
+        0,
+        64
+      ],
+      [
+        0,
+        25
+      ]
+    ],
+    "raw_shape": [
+      1,
+      1,
+      135,
+      135,
+      64,
+      25
+    ],
+    "dtype": "uint16",
+    "pixel_size_um": 0.05,
+    "pixel_dwell_us": 64.0,
+    "notebook_border_removal": 3,
+    "clean_shape": [
+      129,
+      129,
+      64,
+      25
+    ],
+    "time_rebin": {
+      "K": 8,
+      "length": 8,
+      "photon_counts_preserved": true
+    },
+    "s2ism_rbn_idx_in_focus": 0,
+    "raw_archive": {
+      "filename": "tomm20-deconv3-raw-small.npz",
+      "size": 2458294,
+      "sha256": "bd5fb6ad66235367c7a360cf4f261c758bce6ebaae3fdbffa70124213717a007"
+    },
+    "limitations": [
+      "Full source-file checksum not verified; the selected raw array and both packaged archives are independently checked."
+    ]
+  },
+  "psf_capture": {
+    "cell": 13,
+    "source": "# PSFs parameter definition and estimation\nexPar = psf_sim.simSettings()\nexPar.na = 1.49\nexPar.mask_sampl = 101\nemPar = exPar.copy()\n\nexPar.wl = 639 #650 \nemPar.wl = 665 \n\ngrid = psf_sim.GridParameters()\n\npxsizex = meta.dx * 1e3\ngrid.pxsizex = pxsizex\nNz = 2\ngrid.Nz = Nz\n\nopt_out_of_focus_plane, psf_stack = est.find_out_of_focus_from_param(grid.pxsizex, exPar, emPar, mode='Pearson', stack='positive', graph=True) #Pearson KL\ngrid.pxsizez = opt_out_of_focus_plane  # 700 #nm for out-of-focus\n\n# Psf simulation\npsf_ism, _, _ = est.psf_estimator_from_data(dset, exPar, emPar, grid, z_out_of_focus = opt_out_of_focus_plane )\n    \npsf_in = psf_ism[1]\npsf_out = psf_ism[0]\npsf = np.sum(psf_in, axis=-1)\npsf_closed = psf_in[:,:,12]",
+    "optimal_depth_nm": 550.0,
+    "shape": [
+      2,
+      65,
+      65,
+      25
+    ],
+    "dataset": "tomm20-deconv3-psf-small",
+    "environment": {
+      "python": "3.11.18",
+      "packages": {
+        "numpy": "2.4.6",
+        "scipy": "1.17.1",
+        "torch": "2.15.0+cpu",
+        "psf-generator": "0.0.2"
+      }
+    },
+    "sha256": "3d578f0aeacba7ea3d5cd0e2fc47488a468fe504ba61d775c87253129b94c9ca"
+  },
+  "comparison": {
+    "exact": true,
+    "shape": true,
+    "dtype": true
+  },
+  "uv_lock_sha256": "5db121b5c6b89695eb900a58fd449874b530a661d5adf7262b65c0b5449faf7c"
+}

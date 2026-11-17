@@ -1,0 +1,318 @@
+{
+  "status": "preprocessing-captured-full-fit-pending",
+  "notebook": "examples/imaging/psf_distiller/distiller_test_beads.ipynb",
+  "notebook_sha256": "c354f8e293cb3c7b28e5c6b8e7e46cd44ad5ac905b3a4b9ea65840324910e018",
+  "source_revision": "77b9667b6fded1c4f6fe5c2747b0f5bc6b5d0c46",
+  "measurement": {
+    "measurement_id": "measurement-002",
+    "bytes": 394970776,
+    "shape": [
+      1,
+      1,
+      250,
+      250,
+      100,
+      25
+    ],
+    "full_checksum_verified": false
+  },
+  "coordinates_sha256": "87766dccd5a4c2bb777bca5393ed2a95ecdc2937157cbb10b21ec03f4e703f89",
+  "input": {
+    "dataset": "beads-measured-small",
+    "filename": "beads-measured-small.npz",
+    "bytes": 1815960,
+    "sha256": "ebc0c63370ec48743435aeb41eb3ad05b47d7f77eee86ad9fb07e95ccf322650"
+  },
+  "historical_registered_beads": {
+    "sha256": "61baf153f8d2fa9f667f57f0bd85ab23fd0840149a6aa5ee06e02edd50bc6a13",
+    "exact": true,
+    "max_absolute_difference": 0.0
+  },
+  "environment": {
+    "python": "3.11.18",
+    "system": "Windows",
+    "device": "cpu",
+    "threads": 1,
+    "packages": {
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "torch": "2.15.0+cpu",
+      "scikit-image": "0.26.0",
+      "psf-generator": "0.0.2"
+    }
+  },
+  "adjustments": [
+    "Read raw HDF5 in strips to limit memory use.",
+    "Retain raw crops for all 15 beads, bins and channels.",
+    "Omit notebook displays."
+  ],
+  "stages": [
+    {
+      "name": "padding",
+      "cell": 12,
+      "executed_source": "pad = 100\nnx = np.shape(data)[0]\nnc = np.shape(data)[2]\ndata_padded = np.zeros((nx + 2 * pad, nx + 2 * pad, nc))\ndata_padded[pad:pad + nx, pad:pad + nx, :] = data\nclicked_points_pad = clicked_points + pad",
+      "variables": [
+        "clicked_points_pad"
+      ],
+      "file": "padding.npz",
+      "sha256": "55568bd1d284deacb7d873cf75e708da52f881a88b5372860436cd155a6466a6",
+      "arrays": {
+        "clicked_points_pad": {
+          "shape": [
+            15,
+            2
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "13f34cd64862e54b2e936e4fc1e6e33fe25c73d4ae68204d265917a40597890e",
+      "seconds": 0.015000000001236913
+    },
+    {
+      "name": "bead-extraction",
+      "cell": 13,
+      "executed_source": "range_particle = 18\nsingle_beads = np.zeros((n_beads, 2 * range_particle, 2 * range_particle, 25))\nfor i in range(n_beads):\n    bead_coord = clicked_points_pad[i]\n    xmin = int(bead_coord[0] - range_particle)\n    xmax = int(bead_coord[0] + range_particle)\n    ymin = int(bead_coord[1] - range_particle)\n    ymax = int(bead_coord[1] + range_particle)\n    single_beads[i,] = data_padded[ymin:ymax, xmin:xmax, :]",
+      "variables": [
+        "single_beads"
+      ],
+      "file": "bead-extraction.npz",
+      "sha256": "ca20951b20b1ec8d8c01ab677c539b7210447b9a58043417ea9707a21840f527",
+      "arrays": {
+        "single_beads": {
+          "shape": [
+            15,
+            36,
+            36,
+            25
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "d2fc8f91cf68e0bd5d500dae0a0d57083646ea03283f206ea57293b38acbc326",
+      "seconds": 0.07799999999951979
+    },
+    {
+      "name": "registration-shifts",
+      "cell": 17,
+      "executed_source": "sum5 = np.zeros((2 * range_particle, 2 * range_particle, n_beads))\nfor i in range(n_beads):\n    sum5[:, :, i] = np.sum(single_beads[i,], -1)\npxsize = 40\nshift_vec, result_ism_pc = APR(sum5, 10, 0, pxsize)",
+      "variables": [
+        "sum5",
+        "shift_vec",
+        "result_ism_pc"
+      ],
+      "file": "registration-shifts.npz",
+      "sha256": "c77eb714fd99cdf0261f7af10f16638e82984708d3725aa2c13765af412ed345",
+      "arrays": {
+        "sum5": {
+          "shape": [
+            36,
+            36,
+            15
+          ],
+          "dtype": "float64"
+        },
+        "shift_vec": {
+          "shape": [
+            15,
+            2
+          ],
+          "dtype": "float64"
+        },
+        "result_ism_pc": {
+          "shape": [
+            36,
+            36,
+            15
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "237c02981f6a3398b97652c161b832e7ba35a5b0bdc98f93d15572da8cb91bcc",
+      "seconds": 0.0319999999992433
+    },
+    {
+      "name": "registered-beads",
+      "cell": 19,
+      "executed_source": "single_beads_registered = np.zeros((n_beads, 2 * range_particle, 2 * range_particle, 25))\nfor i in range(n_beads):\n    single_beads_registered[i,] = Reassignment(np.tile([shift_vec[i, :] / pxsize], (25, 1)), single_beads[i,])",
+      "variables": [
+        "single_beads_registered"
+      ],
+      "file": "registered-beads.npz",
+      "sha256": "1e53cce36e5a71cfdbe839cb2c6628de5c3002ac23c5d96884b09c437a2f10d8",
+      "arrays": {
+        "single_beads_registered": {
+          "shape": [
+            15,
+            36,
+            36,
+            25
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "5496aac5f5ddad815d82324a1e6df342f9d893137de8a8de6e22c2e2253cae15",
+      "seconds": 0.1400000000012369
+    },
+    {
+      "name": "summed-psf",
+      "cell": 21,
+      "executed_source": "exp_psf = np.sum(single_beads_registered, 0)",
+      "variables": [
+        "exp_psf"
+      ],
+      "file": "summed-psf.npz",
+      "sha256": "f60cccb31fa67f4cc44a2c2a087028f4892ebf89c50ca2fa24a1db1262085335",
+      "arrays": {
+        "exp_psf": {
+          "shape": [
+            36,
+            36,
+            25
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "e138e2ca49615754c897a5e3faa497cf9a6361cbab4a8c0e833fe2dcf9200f44",
+      "seconds": 0.01599999999962165
+    },
+    {
+      "name": "centered-psf",
+      "cell": 23,
+      "executed_source": "data = np.empty_like(exp_psf)\nnx = np.shape(exp_psf)[0]\nny = nx\ncx, cy, cc = tool.ArgMaxND(gaussian(exp_psf, 4, channel_axis=-1))[0]\nsx, sy = (nx // 2 - cx, ny // 2 - cy)\ndata = np.roll(exp_psf, [sx, sy], axis=(0, 1))\ndata = data / data.sum()",
+      "variables": [
+        "data"
+      ],
+      "file": "centered-psf.npz",
+      "sha256": "df63257745d1dc14f293ebcec5d0477e3076717d98f5a0d815ce583534c0cd39",
+      "arrays": {
+        "data": {
+          "shape": [
+            36,
+            36,
+            25
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "25544287975fdda0ff3cc3a7e524b460b4145fddb702cf93e80f7e4a0b05b309",
+      "seconds": 0.030999999999039574
+    },
+    {
+      "name": "background-subtraction",
+      "cell": 27,
+      "executed_source": "ex_psf_cropped = data[3:-3, 3:-3, :]\nbg = np.asarray([np.median(ex_psf_cropped[:, :, k]) for k in range(25)])\nexp_psf_filtered = np.clip(ex_psf_cropped - bg, 0, None)\nexp_psf_filtered = exp_psf_filtered / exp_psf_filtered.sum()",
+      "variables": [
+        "bg",
+        "exp_psf_filtered"
+      ],
+      "file": "background-subtraction.npz",
+      "sha256": "cb08ad2ef7f44bf2aefba4380891fed0f2fc5e26a24296b67213865232d4c8e3",
+      "arrays": {
+        "bg": {
+          "shape": [
+            25
+          ],
+          "dtype": "float64"
+        },
+        "exp_psf_filtered": {
+          "shape": [
+            30,
+            30,
+            25
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "fca44c35e3e0eef267ae41f1b63acd80381981ea36e426a5565e88a7e91511b3",
+      "seconds": 0.01600000000144064
+    },
+    {
+      "name": "detector-shifts",
+      "cell": 28,
+      "executed_source": "shift_vectors, _ = ShiftVectors(exp_psf_filtered, 10, 12)",
+      "variables": [
+        "shift_vectors"
+      ],
+      "file": "detector-shifts.npz",
+      "sha256": "6034d0d6293b8ebcd1851a14881ae305e4b8286f001840e2f55e35dabb8f2356",
+      "arrays": {
+        "shift_vectors": {
+          "shape": [
+            25,
+            2
+          ],
+          "dtype": "float64"
+        }
+      },
+      "source_sha256": "b5dd6c8d28fb1c33eaaae6aabfab377c62d3900052a59c0234414f52a5c819a0",
+      "seconds": 0.014999999999417923
+    },
+    {
+      "name": "detector-calibration",
+      "cell": 30,
+      "executed_source": "data = exp_psf_filtered\nprocess = 'cpu'\nexPar = sim.simSettings()\nexPar.na = 1.4\nexPar.wl = 640\nexPar.gamma = 45\nexPar.beta = 90\nexPar.n = 1.5\nexPar.mask_sampl = 101\nemPar = exPar.copy()\nemPar.wl = 660\ngrid = sim.GridParameters()\ngrid.pxsizex = 40\ngrid.Nx = data.shape[0]\ngrid.pxpitch = 75000.0\ngrid.pxdim = 70000.0\ngrid.pinhole_shape = 'circle'\ngrid.N = 5\ngrid.M = 500\ngrid_fit = GridFinder(grid)\ngrid_fit.estimate(data, exPar.wl, emPar.wl, exPar.na)\ngrid_fit.M = grid.M\nspad = sim.custom_detector(grid_fit, 'cpu')",
+      "variables": [
+        "spad"
+      ],
+      "file": "detector-calibration.npz",
+      "sha256": "3214df084b9560024cdbab8f1e9d6d27eab347521af86f645391ff716b1d5e97",
+      "arrays": {
+        "spad": {
+          "shape": [
+            30,
+            30,
+            25
+          ],
+          "dtype": "float32"
+        }
+      },
+      "source_sha256": "e560070308e699d881cd2da81303b88739447f4f73caa424c388026da9175802",
+      "seconds": 1.0159999999996217
+    }
+  ],
+  "full_fit_source": "result, history = dis.fit_psf(data, exPar, emPar, grid, spad, bead_radius=40, independent_wavefront=True, num_starts=100, max_iter=1000)",
+  "post_fit_stages": [
+    {
+      "cell": 33,
+      "name": "aberration-coefficients",
+      "executed_source": "zer_max = 15\nzernike_idx = np.arange(zer_max)\nn_zer = zer_max - dis.FIXED_ZERNIKE\nzer_ex = result[0].cpu().detach()\nexPar.abe_index = zernike_idx\nexPar.abe_ampli = zer_ex\nzer_em = result[1].cpu().detach()\nemPar.abe_index = zernike_idx\nemPar.abe_ampli = zer_em\nnames = exPar.aberration\nzernike_output_ex = zer_ex\nzernike_output_em = zer_em",
+      "variables": [
+        "zernike_output_ex",
+        "zernike_output_em"
+      ]
+    },
+    {
+      "cell": 35,
+      "name": "distilled-psfs",
+      "executed_source": "fit, *_ = sim.SPAD_PSF_2D(grid, exPar, emPar, spad=spad, process=process)",
+      "variables": [
+        "fit"
+      ]
+    },
+    {
+      "cell": 36,
+      "name": "wavefronts",
+      "executed_source": "wavefront_fit_ex = exPar.wavefront\nemPar.abe_index = zernike_idx\nemPar.abe_ampli = zernike_output_em\nwavefront_fit_em = emPar.wavefront",
+      "variables": [
+        "wavefront_fit_ex",
+        "wavefront_fit_em"
+      ]
+    },
+    {
+      "cell": 38,
+      "name": "vortex-psfs",
+      "executed_source": "exPar.mask = 'vortex'\npsf_vortex, *_ = sim.SPAD_PSF_2D(grid, exPar, emPar, spad=spad, process=process)",
+      "variables": [
+        "psf_vortex"
+      ]
+    }
+  ],
+  "scientific_sources_sha256": {
+    "src/brighteyes/imaging/analysis/Tools_lib.py": "a82a6149b8e4eab286eeb35fa2c57f3db87d95c95288d80833af9fe30590e5af",
+    "src/brighteyes/imaging/simulation/PSF_sim.py": "5575b01dfd118b55af46b57d0bb54a0806a432bd80c60c00a1b6d2cd11a4c5d9",
+    "src/brighteyes/imaging/psf_distiller/distiller.py": "a7d4a57e134facb6cf50e96779495851011943c93909ec71aefd922f630e972f",
+    "src/brighteyes/imaging/analysis/APR_lib.py": "2696e69b56ef423905668ad8215c2b1005c93dc6b95d58f23d757c01679f3d91",
+    "src/brighteyes/imaging/s2ism/psf_estimator.py": "3a8faee47b97e39993b03c8350b9efb4e1d723572d5fdcb045d2f6ad21991453"
+  },
+  "text_hash_policy": "UTF-8 with LF line endings"
+}

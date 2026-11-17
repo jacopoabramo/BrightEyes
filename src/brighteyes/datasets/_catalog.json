@@ -1,0 +1,89 @@
+{
+  "ism-cell-full": {
+    "url": "https://zenodo.org/records/7343112/files/Cell_ISM_dataset.h5",
+    "filename": "Cell_ISM_dataset.h5",
+    "size": 3187611072,
+    "checksum": "md5:24dd933c66316495bf48cb2cef3e237c"
+  },
+  "ism-psf-full": {
+    "url": "https://zenodo.org/records/7343112/files/PSF_ISM_dataset.h5",
+    "filename": "PSF_ISM_dataset.h5",
+    "size": 1682995376,
+    "checksum": "md5:acbc7e3210811c28b8896f7799105e50"
+  },
+  "s2ism-full": {
+    "url": "https://zenodo.org/records/11284051/files/h5_files_s2ism.zip",
+    "filename": "h5_files_s2ism.zip",
+    "size": 3922127512,
+    "checksum": "md5:6c09c31be8ff54833c6d6201dff21e01"
+  },
+  "rbn-histone-full": {
+    "url": "https://zenodo.org/records/23360909/files/04_H3K9_Atto647N-17-04-2026-16-41-54.h5",
+    "filename": "04_H3K9_Atto647N-17-04-2026-16-41-54.h5",
+    "size": 1372951664,
+    "checksum": "md5:45a54af5ddcd17ad59447e4dcb0822cc"
+  },
+  "rbn-phalloidin-full": {
+    "url": "https://zenodo.org/records/23360909/files/06_Phalloidin_AF647-23-06-2026-17-45-08.h5",
+    "filename": "06_Phalloidin_AF647-23-06-2026-17-45-08.h5",
+    "size": 1373299320,
+    "checksum": "md5:36dfa21e50d74ce84814cd9480a26bf8"
+  },
+  "ffs-alexa-full": {
+    "url": "https://zenodo.org/records/4161418/files/05_Alexa488AB_20ugmL_P60percP_SPAD.7z",
+    "filename": "05_Alexa488AB_20ugmL_P60percP_SPAD.7z",
+    "size": 218958801,
+    "checksum": "md5:6ebb50e581af870637b0f2c5af31c130"
+  },
+  "ffs-alexa-correlations-full": {
+    "url": "https://zenodo.org/records/4161418/files/05_Alexa488AB_20ugmL_P60percP_SPAD_xcorrs.7z",
+    "filename": "05_Alexa488AB_20ugmL_P60percP_SPAD_xcorrs.7z",
+    "size": 3120423,
+    "checksum": "md5:d226c08be3608346bd8e9fd07e3bb88e"
+  },
+  "flus2ism-psf-batch-small": {
+    "path": "PSFs_comp_batchtest.npy",
+    "size": 192328,
+    "sha256": "ce9533d605c52a95a6679b4e60ce0845587207549f015bff89571445ed9f758d"
+  },
+  "ism-simulation-small": {
+    "path": "ism-simulation-small.npz",
+    "size": 199508,
+    "sha256": "35cb300ad06cd570f5e0b8e4d939ccd50915fab905e64ee6da44329643e6866a"
+  },
+  "birfi-small": {
+    "path": "birfi-small.npz",
+    "size": 10789,
+    "sha256": "82e1c73d14b370ad808ba6d6a992aafb9eab5c4e7c61c8f7049b2ec3f9757220"
+  },
+  "psf-distiller-small": {
+    "path": "psf-distiller-small.npz",
+    "size": 221,
+    "sha256": "24613395e30e05d623ce9675f419eb1b3b6f5f0dcc32f0241974b6c33452f696"
+  },
+  "flus2ism-small": {
+    "path": "flus2ism-small.npz",
+    "size": 113438,
+    "sha256": "237544e609c5e498cc01894276fa736622ba80cca263db31435cb7eb94020ea8"
+  },
+  "ism-cell-small": {
+    "path": "ism-cell-small.npz",
+    "size": 259061,
+    "sha256": "60fd428b6470b02590ff19a22d280e6af106cc4110162d5fe2c1e5d31937a2cb"
+  },
+  "beads-measured-small": {
+    "path": "beads-measured-small.npz",
+    "size": 1815960,
+    "sha256": "ebc0c63370ec48743435aeb41eb3ad05b47d7f77eee86ad9fb07e95ccf322650"
+  },
+  "tomm20-deconv3-raw-small": {
+    "path": "tomm20-deconv3-raw-small.npz",
+    "size": 2458294,
+    "sha256": "bd5fb6ad66235367c7a360cf4f261c758bce6ebaae3fdbffa70124213717a007"
+  },
+  "tomm20-deconv3-psf-small": {
+    "path": "tomm20-deconv3-psf-small.npz",
+    "size": 773525,
+    "sha256": "3d578f0aeacba7ea3d5cd0e2fc47488a468fe504ba61d775c87253129b94c9ca"
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "name": "full-fit",
+  "cell": 31,
+  "executed_source": "result, history = dis.fit_psf(data, exPar, emPar, grid, spad, bead_radius=40, independent_wavefront=True, num_starts=100, max_iter=1000)",
+  "variables": [
+    "result",
+    "history"
+  ],
+  "file": "full-fit.npz",
+  "sha256": "c2516ed50842b6ecfb0a8c0a284dbe79958b2592700b0af132f5c8000dd5555a",
+  "arrays": {
+    "result": {
+      "shape": [
+        2,
+        15
+      ],
+      "dtype": "float32",
+      "nan_count": 0
+    },
+    "history": {
+      "shape": [
+        100,
+        1000
+      ],
+      "dtype": "float32",
+      "nan_count": 0
+    }
+  },
+  "seconds": 2654.047,
+  "environment": {
+    "python": "3.11.9",
+    "system": "Windows",
+    "device": "cpu",
+    "threads": 1,
+    "packages": {
+      "numpy": "2.4.6",
+      "scipy": "1.17.1",
+      "torch": "2.15.0+cpu",
+      "scikit-image": "0.26.0",
+      "psf-generator": "0.0.2"
+    }
+  },
+  "adjustment": "Freeze the scrambled Sobol starting points with rng=0.",
+  "input_manifest_sha256": "3d62d2e13266f46f693754bbe2dd9f0e3702eb26645f525b4cc8feb8070c644c",
+  "text_hash_policy": "UTF-8 with LF line endings",
+  "source_revision": "c86f17eefe009671c392d107218cfc20af2bd1db",
+  "starting_points_sha256": "97ba359aef638c92e1b91e57e83d1ffd43760b1883d2e6fa56b8c79fdd59a4fa",
+  "post_fit_stages": [
+    {
+      "name": "aberration-coefficients",
+      "cell": 33,
+      "executed_source": "zer_max = 15\nzernike_idx = np.arange(zer_max)\nn_zer = zer_max - dis.FIXED_ZERNIKE\nzer_ex = result[0].cpu().detach()\nexPar.abe_index = zernike_idx\nexPar.abe_ampli = zer_ex\nzer_em = result[1].cpu().detach()\nemPar.abe_index = zernike_idx\nemPar.abe_ampli = zer_em\nnames = exPar.aberration\nzernike_output_ex = zer_ex\nzernike_output_em = zer_em",
+      "variables": [
+        "zernike_output_ex",
+        "zernike_output_em"
+      ],
+      "file": "aberration-coefficients.npz",
+      "sha256": "3dda2bb6719224ffbf098da49ee9e23a4b1d0272da17253b7a418b7b411fe834",
+      "arrays": {
+        "zernike_output_ex": {
+          "shape": [
+            15
+          ],
+          "dtype": "float32",
+          "nan_count": 0
+        },
+        "zernike_output_em": {
+          "shape": [
+            15
+          ],
+          "dtype": "float32",
+          "nan_count": 0
+        }
+      }
+    },
+    {
+      "name": "distilled-psfs",
+      "cell": 35,
+      "executed_source": "fit, *_ = sim.SPAD_PSF_2D(grid, exPar, emPar, spad=spad, process=process)",
+      "variables": [
+        "fit"
+      ],
+      "file": "distilled-psfs.npz",
+      "sha256": "6c7f0080b08baf7de933af525f2bfeff194067d1e23d454428368e14f72ab329",
+      "arrays": {
+        "fit": {
+          "shape": [
+            30,
+            30,
+            25
+          ],
+          "dtype": "float32",
+          "nan_count": 0
+        }
+      }
+    },
+    {
+      "name": "wavefronts",
+      "cell": 36,
+      "executed_source": "wavefront_fit_ex = exPar.wavefront\nemPar.abe_index = zernike_idx\nemPar.abe_ampli = zernike_output_em\nwavefront_fit_em = emPar.wavefront",
+      "variables": [
+        "wavefront_fit_ex",
+        "wavefront_fit_em"
+      ],
+      "file": "wavefronts.npz",
+      "sha256": "929965c1e72ab2fad8bd5133a617e43d941a8832dd06205501444945ec81d0ac",
+      "arrays": {
+        "wavefront_fit_ex": {
+          "shape": [
+            101,
+            101
+          ],
+          "dtype": "float64",
+          "nan_count": 2376
+        },
+        "wavefront_fit_em": {
+          "shape": [
+            101,
+            101
+          ],
+          "dtype": "float64",
+          "nan_count": 2376
+        }
+      }
+    },
+    {
+      "name": "vortex-psfs",
+      "cell": 38,
+      "executed_source": "exPar.mask = 'vortex'\npsf_vortex, *_ = sim.SPAD_PSF_2D(grid, exPar, emPar, spad=spad, process=process)",
+      "variables": [
+        "psf_vortex"
+      ],
+      "file": "vortex-psfs.npz",
+      "sha256": "ab050dafcd4de439526a82d8bd07677c34ba49d356eb451be9d2d2cabcb94a1c",
+      "arrays": {
+        "psf_vortex": {
+          "shape": [
+            30,
+            30,
+            25
+          ],
+          "dtype": "float32",
+          "nan_count": 0
+        }
+      }
+    }
+  ],
+  "metadata_redaction": "Replace the private measurement filename with a neutral ID; preserve all numerical inputs and outputs."
+}
