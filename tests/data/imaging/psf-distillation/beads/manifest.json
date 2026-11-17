@@ -1,7 +1,7 @@
 {
   "status": "preprocessing-captured-full-fit-pending",
   "notebook": "examples/imaging/psf_distiller/distiller_test_beads.ipynb",
-  "notebook_sha256": "c354f8e293cb3c7b28e5c6b8e7e46cd44ad5ac905b3a4b9ea65840324910e018",
+  "notebook_sha256": "d8c4316a23b6561930461d98b0326bb0ae7996a834a47d6284d3cdb707da61b1",
   "source_revision": "77b9667b6fded1c4f6fe5c2747b0f5bc6b5d0c46",
   "measurement": {
     "measurement_id": "measurement-002",

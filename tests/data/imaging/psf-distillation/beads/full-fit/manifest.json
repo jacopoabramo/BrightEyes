@@ -41,7 +41,7 @@
     }
   },
   "adjustment": "Freeze the scrambled Sobol starting points with rng=0.",
-  "input_manifest_sha256": "3d62d2e13266f46f693754bbe2dd9f0e3702eb26645f525b4cc8feb8070c644c",
+  "input_manifest_sha256": "31bf8c48a6147ddc5dbb9d2a0a1e9bc848c558f875e567b2c20cab9ef14d3c28",
   "text_hash_policy": "UTF-8 with LF line endings",
   "source_revision": "c86f17eefe009671c392d107218cfc20af2bd1db",
   "starting_points_sha256": "97ba359aef638c92e1b91e57e83d1ffd43760b1883d2e6fa56b8c79fdd59a4fa",
@@ -145,5 +145,5 @@
       }
     }
   ],
-  "metadata_redaction": "Replace the private measurement filename with a neutral ID; preserve all numerical inputs and outputs."
+  "metadata_redaction": "Replace private measurement locations with neutral paths and IDs; preserve all numerical inputs and outputs."
 }
